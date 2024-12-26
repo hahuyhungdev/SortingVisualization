@@ -1,3 +1,4 @@
+import QuickSortVisualization from '@/components/QuickSort'
 import { useCallback, useEffect, useState } from 'react'
 
 interface SortingStep {
@@ -9,7 +10,7 @@ interface SortingStep {
 }
 
 const SortingVisualization = () => {
-  const [array, setArray] = useState<number[]>([7, 8, 10, 1, 5, 11, 3, 12, 6, 4, 9])
+  const [array, setArray] = useState<number[]>([6, 5, 8, 9, 3, 10, 15, 12, 16])
   const [inputValue, setInputValue] = useState<string>('')
   const [selectedAlgorithm, setSelectedAlgorithm] = useState<string>('quickSort')
   const [sortingSteps, setSortingSteps] = useState<SortingStep[]>([])
@@ -17,6 +18,7 @@ const SortingVisualization = () => {
   const [isPlaying, setIsPlaying] = useState<boolean>(false)
   const [speed, setSpeed] = useState<number>(1000) // milliseconds per step
   const [arrayLength, setArrayLength] = useState<string>('')
+  const [activeQuickSort, setActiveQuickSort] = useState<boolean>(false)
 
   const generateRandomArray = (length: number) => {
     const randomRange = Math.floor(Math.random() * 50) + 1
@@ -53,7 +55,7 @@ const SortingVisualization = () => {
 
   const generateQuickSortSteps = useCallback((arr: number[]): SortingStep[] => {
     const steps: SortingStep[] = []
-    const finalPositionIndices: number[] = [] // Đổi tên từ sortedIndices
+    const finalPositionIndices: number[] = []
 
     const swap = (arr: number[], firstIndex: number, secondIndex: number) => {
       ;[arr[firstIndex], arr[secondIndex]] = [arr[secondIndex], arr[firstIndex]]
@@ -62,7 +64,7 @@ const SortingVisualization = () => {
         comparedIndices: [],
         swappedIndices: [firstIndex, secondIndex],
         sortedIndices: [...finalPositionIndices],
-        message: `Hoán đổi phần tử ${arr[secondIndex]} (index${secondIndex}) với ${arr[firstIndex]} (index ${firstIndex})`
+        message: `Hoán đổi phần tử ${arr[firstIndex]} (index ${firstIndex}) với ${arr[secondIndex]} (index ${secondIndex})`
       })
     }
 
@@ -70,6 +72,7 @@ const SortingVisualization = () => {
       const pivotIndex = Math.floor(low + (high - low) / 2)
       const pivotValue = arr[pivotIndex]
       swap(arr, low, pivotIndex)
+
       let left = low + 1
       let right = high
 
@@ -78,47 +81,27 @@ const SortingVisualization = () => {
         comparedIndices: [pivotIndex],
         swappedIndices: [],
         sortedIndices: [...finalPositionIndices],
-        message: `Chọn chốt (pivot) là ${pivotValue} tại vị trí ${pivotIndex}`
+        message: `Chọn pivot là ${pivotValue} tại vị trí ${pivotIndex}`
       })
 
       while (left < right) {
-        while (left <= high && arr[left] < pivotValue) {
-          steps.push({
-            array: [...arr],
-            comparedIndices: [left, pivotIndex],
-            swappedIndices: [],
-            sortedIndices: [...finalPositionIndices],
-            message: `So sánh: ${arr[left]} < ${pivotValue} (pivot) - Di chuyển con trỏ trái`
-          })
-          left++
-        }
-
-        while (right >= low + 1 && arr[right] >= pivotValue) {
-          steps.push({
-            array: [...arr],
-            comparedIndices: [right, pivotIndex],
-            swappedIndices: [],
-            sortedIndices: [...finalPositionIndices],
-            message: `So sánh: ${arr[right]} > ${pivotValue} (pivot) - Di chuyển con trỏ phải`
-          })
-          right--
-        }
+        while (left <= high && arr[left] < pivotValue) left++
+        while (right >= low + 1 && arr[right] >= pivotValue) right--
 
         if (left < right) swap(arr, left, right)
       }
 
-      if (!finalPositionIndices.includes(pivotIndex)) {
-        finalPositionIndices.push(pivotIndex)
-      }
+      swap(arr, low, right)
 
+      finalPositionIndices.push(right)
       steps.push({
         array: [...arr],
         comparedIndices: [],
         swappedIndices: [],
         sortedIndices: [...finalPositionIndices],
-        message: `Hoàn thành phân vùng: Các phần tử bên trái ${pivotValue} nhỏ hơn ${pivotValue}, bên phải lớn hơn ${pivotValue}`
+        message: `Hoàn thành phân vùng: Các phần tử bên trái ${pivotValue} nhỏ hơn pivot, bên phải lớn hơn pivot`
       })
-      swap(arr, low, right)
+
       return right
     }
 
@@ -131,38 +114,22 @@ const SortingVisualization = () => {
           comparedIndices: [],
           swappedIndices: [],
           sortedIndices: [...finalPositionIndices],
-          message: `Chia mảng thành 2 phần: [${arr.slice(start, partitionPoint)}] và [${arr.slice(partitionPoint)}]`
+          message: `Chia mảng thành 2 phần: [${arr.slice(start, partitionPoint)}] và [${arr.slice(partitionPoint + 1)}]`
         })
 
-        // Sắp xếp phần bên trái
         quickSort(arr, start, partitionPoint - 1)
-
-        // Sắp xếp phần bên phải
         quickSort(arr, partitionPoint + 1, end)
-
-        // Đánh dấu phần tử đã ở đúng vị trí
-        if (!finalPositionIndices.includes(start)) {
-          finalPositionIndices.push(start)
-          steps.push({
-            array: [...arr],
-            comparedIndices: [],
-            swappedIndices: [],
-            sortedIndices: [...finalPositionIndices],
-            message: `Phần tử ${arr[start]} đã ở đúng vị trí cuối cùng (vị trí ${start})`
-          })
-        }
       }
     }
 
     const arrayToSort = [...arr]
     quickSort(arrayToSort, 0, arrayToSort.length - 1)
 
-    // Thêm bước cuối cùng
     steps.push({
       array: arrayToSort,
       comparedIndices: [],
       swappedIndices: [],
-      sortedIndices: [...Array(arrayToSort.length).keys()], // Đánh dấu tất cả đã sắp xếp
+      sortedIndices: [...Array(arrayToSort.length).keys()],
       message: `Hoàn thành sắp xếp: [${arrayToSort.join(', ')}]`
     })
 
@@ -524,7 +491,6 @@ const SortingVisualization = () => {
     <div className='p-6 max-w-6xl mx-auto border rounded-lg shadow-md bg-white'>
       <div className='space-y-6'>
         <h2 className='text-2xl font-bold text-center'>Sorting Algorithm Visualization</h2>
-
         <div className='flex flex-wrap gap-4 justify-center'>
           <div className='flex gap-2 items-center'>
             <input
@@ -667,6 +633,13 @@ const SortingVisualization = () => {
             <span>Sorted</span>
           </div>
         </div>
+        <button
+          className='bg-blue-500 text-white px-4 py-2 rounded'
+          onClick={() => {
+            setActiveQuickSort(!activeQuickSort)
+          }}
+        ></button>
+        {activeQuickSort && <QuickSortVisualization data={array} />}
         <img src='/complexity.png' alt='time complexity of sorting algorithms' className='w-full' />
         <div className='text-center text-sm text-gray-500'>
           <p>
