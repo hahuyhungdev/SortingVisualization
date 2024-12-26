@@ -9,7 +9,7 @@ interface SortingStep {
 }
 
 const SortingVisualization = () => {
-  const [array, setArray] = useState<number[]>([7, 8, 10, 1, 5, 20, 3, 2, 6, 4, 9])
+  const [array, setArray] = useState<number[]>([7, 8, 10, 1, 5, 11, 3, 12, 6, 4, 9])
   const [inputValue, setInputValue] = useState<string>('')
   const [selectedAlgorithm, setSelectedAlgorithm] = useState<string>('quickSort')
   const [sortingSteps, setSortingSteps] = useState<SortingStep[]>([])
@@ -46,104 +46,124 @@ const SortingVisualization = () => {
 
   const generateQuickSortSteps = useCallback((arr: number[]): SortingStep[] => {
     const steps: SortingStep[] = []
-    const sortedIndices: number[] = []
+    const finalPositionIndices: number[] = [] // Đổi tên từ sortedIndices
 
-    const swap = (arr: number[], i: number, j: number) => {
-      ;[arr[i], arr[j]] = [arr[j], arr[i]]
+    const swap = (arr: number[], firstIndex: number, secondIndex: number) => {
+      ;[arr[firstIndex], arr[secondIndex]] = [arr[secondIndex], arr[firstIndex]]
       steps.push({
         array: [...arr],
         comparedIndices: [],
-        swappedIndices: [i, j],
-        sortedIndices: [...sortedIndices],
-        message: `Swapping ${arr[j]} with ${arr[i]}`
+        swappedIndices: [firstIndex, secondIndex],
+        sortedIndices: [...finalPositionIndices],
+        message: `Hoán đổi phần tử ${arr[secondIndex]} (index${secondIndex}) với ${arr[firstIndex]} (index ${firstIndex})`
       })
     }
 
-    const partition = (arr: number[], low: number, high: number): number => {
-      const pivotIndex = Math.floor(low + (high - low) / 2)
-      const pivot = arr[pivotIndex]
-      let i = low
-      let j = high
+    const partition = (arr: number[], leftBound: number, rightBound: number): number => {
+      const pivotIndex = Math.floor(leftBound + (rightBound - leftBound) / 2)
+      const pivotValue = arr[pivotIndex]
+      let leftPointer = leftBound
+      let rightPointer = rightBound
 
       steps.push({
         array: [...arr],
-        comparedIndices: [pivotIndex], // Highlight pivotIndex
+        comparedIndices: [pivotIndex],
         swappedIndices: [],
-        sortedIndices: [...sortedIndices],
-        message: `Choosing ${pivot} as pivot at index ${pivotIndex}`
+        sortedIndices: [...finalPositionIndices],
+        message: `Chọn chốt (pivot) là ${pivotValue} tại vị trí ${pivotIndex}`
       })
 
-      while (i <= j) {
-        while (arr[i] < pivot) {
+      while (leftPointer <= rightPointer) {
+        while (arr[leftPointer] < pivotValue) {
           steps.push({
             array: [...arr],
-            comparedIndices: [i, pivotIndex], // Compare với pivotIndex
+            comparedIndices: [leftPointer, pivotIndex],
             swappedIndices: [],
-            sortedIndices: [...sortedIndices],
-            message: `Looking for element greater than pivot ${pivot}: checking ${arr[i]}`
+            sortedIndices: [...finalPositionIndices],
+            message: `So sánh: ${arr[leftPointer]} < ${pivotValue} (pivot) - Di chuyển con trỏ trái`
           })
-          i++
+          leftPointer++
         }
 
-        while (arr[j] > pivot) {
+        while (arr[rightPointer] > pivotValue) {
           steps.push({
             array: [...arr],
-            comparedIndices: [j, pivotIndex], // Compare với pivotIndex
+            comparedIndices: [rightPointer, pivotIndex],
             swappedIndices: [],
-            sortedIndices: [...sortedIndices],
-            message: `Looking for element less than or equal to pivot ${pivot}: checking ${arr[j]}`
+            sortedIndices: [...finalPositionIndices],
+            message: `So sánh: ${arr[rightPointer]} > ${pivotValue} (pivot) - Di chuyển con trỏ phải`
           })
-          j--
+          rightPointer--
         }
 
-        if (i <= j) {
-          swap(arr, i, j)
-          i++
-          j--
+        if (leftPointer <= rightPointer) {
+          if (leftPointer !== rightPointer) {
+            swap(arr, leftPointer, rightPointer)
+          }
+          leftPointer++
+          rightPointer--
         }
       }
 
-      if (!sortedIndices.includes(j)) {
-        sortedIndices.push(j)
+      if (!finalPositionIndices.includes(pivotIndex)) {
+        finalPositionIndices.push(pivotIndex)
       }
 
       steps.push({
         array: [...arr],
         comparedIndices: [],
         swappedIndices: [],
-        sortedIndices: [...sortedIndices],
-        message: `Partition completed. Elements < ${pivot} are on the left, elements > ${pivot} are on the right`
+        sortedIndices: [...finalPositionIndices],
+        message: `Hoàn thành phân vùng: Các phần tử bên trái ${pivotValue} nhỏ hơn ${pivotValue}, bên phải lớn hơn ${pivotValue}`
       })
 
-      return i
+      return leftPointer
     }
 
-    const quickSort = (arr: number[], low: number, high: number) => {
-      if (low < high) {
-        const pivotIndex = partition(arr, low, high)
+    const quickSort = (arr: number[], start: number, end: number) => {
+      if (start < end) {
+        const partitionPoint = partition(arr, start, end)
 
-        // Sort left subarray
-        quickSort(arr, low, pivotIndex - 1)
+        steps.push({
+          array: [...arr],
+          comparedIndices: [],
+          swappedIndices: [],
+          sortedIndices: [...finalPositionIndices],
+          message: `Chia mảng thành 2 phần: [${arr.slice(start, partitionPoint)}] và [${arr.slice(partitionPoint)}]`
+        })
 
-        // Sort right subarray
-        quickSort(arr, pivotIndex, high)
+        // Sắp xếp phần bên trái
+        quickSort(arr, start, partitionPoint - 1)
 
-     
-        if (!sortedIndices.includes(low)) {
-          sortedIndices.push(low)
+        // Sắp xếp phần bên phải
+        quickSort(arr, partitionPoint, end)
+
+        // Đánh dấu phần tử đã ở đúng vị trí
+        if (!finalPositionIndices.includes(start)) {
+          finalPositionIndices.push(start)
           steps.push({
             array: [...arr],
             comparedIndices: [],
             swappedIndices: [],
-            sortedIndices: [...sortedIndices],
-            message: `Element at index ${low} (${arr[low]}) is in its final position`
+            sortedIndices: [...finalPositionIndices],
+            message: `Phần tử ${arr[start]} đã ở đúng vị trí cuối cùng (vị trí ${start})`
           })
         }
       }
     }
 
-    const arrayCopy = [...arr]
-    quickSort(arrayCopy, 0, arrayCopy.length - 1)
+    const arrayToSort = [...arr]
+    quickSort(arrayToSort, 0, arrayToSort.length - 1)
+
+    // Thêm bước cuối cùng
+    steps.push({
+      array: arrayToSort,
+      comparedIndices: [],
+      swappedIndices: [],
+      sortedIndices: [...Array(arrayToSort.length).keys()], // Đánh dấu tất cả đã sắp xếp
+      message: `Hoàn thành sắp xếp: [${arrayToSort.join(', ')}]`
+    })
+
     return steps
   }, [])
 
@@ -580,7 +600,7 @@ const SortingVisualization = () => {
           </button>
         </div>
 
-        <div className='flex flex-col items-center space-y-4'>
+        <div className='flex flex-col items-center'>
           <div className='h-64 relative w-full flex items-end justify-center gap-1'>
             {sortingSteps[currentStep]?.array.map((value, index) => (
               <div
@@ -595,7 +615,15 @@ const SortingVisualization = () => {
             ))}
           </div>
 
-          <div className='text-center text-gray-600'>{sortingSteps[currentStep]?.message || 'Ready to sort'}</div>
+          <div className='flex gap-1'>
+            {array.map((_, index) => (
+              <div key={index} className='w-8'>
+                {index}
+              </div>
+            ))}
+          </div>
+
+          <div className='mt-4 text-center text-gray-600'>{sortingSteps[currentStep]?.message || 'Ready to sort'}</div>
 
           <div className='text-center text-sm text-gray-500'>
             Step {currentStep + 1} / {sortingSteps.length}
@@ -616,7 +644,7 @@ const SortingVisualization = () => {
             <span>Sorted</span>
           </div>
         </div>
-
+        <img src='/complexity.png' alt='time complexity of sorting algorithms' className='w-full' />
         <div className='text-center text-sm text-gray-500'>
           <p>
             Created by:{' '}
