@@ -52,28 +52,29 @@ const SortingVisualization = () => {
     }
 
     const partition = (arr: number[], low: number, high: number): number => {
-      const pivot = arr[low]
+      const pivotIndex = Math.floor((low + high) / 2)
+      const pivot = arr[pivotIndex]
       let i = low
       let j = high
 
-      recordStep([...arr], low, i, j, `Chọn pivot = ${pivot}`)
+      recordStep([...arr], pivotIndex, i, j, `Chọn pivot = ${pivot}`)
 
       while (i < j) {
         while (i <= high && arr[i] <= pivot) {
           i++
-          recordStep([...arr], low, i, j, `Tìm phần tử > ${pivot} từ trái qua`)
+          recordStep([...arr], pivotIndex, i, j, `Tìm phần tử > ${pivot} từ trái qua`)
         }
         while (arr[j] > pivot) {
           j--
-          recordStep([...arr], low, i, j, `Tìm phần tử <= ${pivot} từ phải qua`)
+          recordStep([...arr], pivotIndex, i, j, `Tìm phần tử <= ${pivot} từ phải qua`)
         }
         if (i < j) {
           ;[arr[i], arr[j]] = [arr[j], arr[i]]
-          recordStep([...arr], low, i, j, `Đổi chỗ ${arr[j]} và ${arr[i]}`)
+          recordStep([...arr], pivotIndex, i, j, `Đổi chỗ ${arr[j]} và ${arr[i]}`)
         }
       }
 
-      ;[arr[low], arr[j]] = [arr[j], arr[low]]
+      ;[arr[pivotIndex], arr[j]] = [arr[j], arr[pivotIndex]]
       recordStep([...arr], j, i, j, `Đặt pivot vào vị trí cuối cùng`)
       return j
     }
