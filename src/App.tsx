@@ -42,58 +42,103 @@ const SortingVisualization = () => {
     }
   }
 
-  // Sorting Algorithm Implementations
+  // // Sorting Algorithm Implementations
+
   const generateQuickSortSteps = useCallback((arr: number[]): SortingStep[] => {
     const steps: SortingStep[] = []
     const sortedIndices: number[] = []
 
-    const partition = (arr: number[], low: number, high: number): number => {
-      const pivotIndex = high
-      const pivot = arr[pivotIndex]
-      let i = low - 1
-
-      for (let j = low; j < high; j++) {
-        steps.push({
-          array: [...arr],
-          comparedIndices: [j, pivotIndex],
-          swappedIndices: [],
-          sortedIndices: [...sortedIndices],
-          message: `Comparing ${arr[j]} with pivot ${pivot}`
-        })
-
-        if (arr[j] <= pivot) {
-          i++
-          if (i !== j) {
-            ;[arr[i], arr[j]] = [arr[j], arr[i]]
-            steps.push({
-              array: [...arr],
-              comparedIndices: [],
-              swappedIndices: [i, j],
-              sortedIndices: [...sortedIndices],
-              message: `Swapping ${arr[i]} and ${arr[j]}`
-            })
-          }
-        }
-      }
-
-      ;[arr[i + 1], arr[high]] = [arr[high], arr[i + 1]]
+    const swap = (arr: number[], i: number, j: number) => {
+      ;[arr[i], arr[j]] = [arr[j], arr[i]]
       steps.push({
         array: [...arr],
         comparedIndices: [],
-        swappedIndices: [i + 1, high],
+        swappedIndices: [i, j],
         sortedIndices: [...sortedIndices],
-        message: `Placing pivot ${pivot} in its final position`
+        message: `Swapping ${arr[j]} with ${arr[i]}`
+      })
+    }
+
+    const partition = (arr: number[], low: number, high: number): number => {
+      const pivotIndex = Math.floor(low + (high - low) / 2)
+      const pivot = arr[pivotIndex]
+      let i = low
+      let j = high
+
+      steps.push({
+        array: [...arr],
+        comparedIndices: [pivotIndex], // Highlight pivotIndex
+        swappedIndices: [],
+        sortedIndices: [...sortedIndices],
+        message: `Choosing ${pivot} as pivot at index ${pivotIndex}`
       })
 
-      return i + 1
+      while (i <= j) {
+        while (arr[i] < pivot) {
+          steps.push({
+            array: [...arr],
+            comparedIndices: [i, pivotIndex], // Compare với pivotIndex
+            swappedIndices: [],
+            sortedIndices: [...sortedIndices],
+            message: `Looking for element greater than pivot ${pivot}: checking ${arr[i]}`
+          })
+          i++
+        }
+
+        while (arr[j] > pivot) {
+          steps.push({
+            array: [...arr],
+            comparedIndices: [j, pivotIndex], // Compare với pivotIndex
+            swappedIndices: [],
+            sortedIndices: [...sortedIndices],
+            message: `Looking for element less than or equal to pivot ${pivot}: checking ${arr[j]}`
+          })
+          j--
+        }
+
+        if (i <= j) {
+          swap(arr, i, j)
+          i++
+          j--
+        }
+      }
+
+      if (!sortedIndices.includes(j)) {
+        sortedIndices.push(j)
+      }
+
+      steps.push({
+        array: [...arr],
+        comparedIndices: [],
+        swappedIndices: [],
+        sortedIndices: [...sortedIndices],
+        message: `Partition completed. Elements < ${pivot} are on the left, elements > ${pivot} are on the right`
+      })
+
+      return i
     }
 
     const quickSort = (arr: number[], low: number, high: number) => {
       if (low < high) {
-        const pi = partition(arr, low, high)
-        sortedIndices.push(pi)
-        quickSort(arr, low, pi - 1)
-        quickSort(arr, pi + 1, high)
+        const pivotIndex = partition(arr, low, high)
+
+        // Sort left subarray
+        quickSort(arr, low, pivotIndex - 1)
+
+        // Sort right subarray
+        quickSort(arr, pivotIndex, high)
+
+     
+        if (!sortedIndices.includes(low)) {
+          sortedIndices.push(low)
+          steps.push({
+            array: [...arr],
+            comparedIndices: [],
+            swappedIndices: [],
+            sortedIndices: [...sortedIndices],
+            message: `Element at index ${low} (${arr[low]}) is in its final position`
+          })
+        }
       }
     }
 
@@ -172,23 +217,6 @@ const SortingVisualization = () => {
   }, [])
 
   useEffect(() => {
-    let steps: SortingStep[] = []
-    switch (selectedAlgorithm) {
-      case 'quickSort':
-        steps = generateQuickSortSteps(array)
-        break
-      case 'mergeSort':
-        steps = generateMergeSortSteps(array)
-        break
-      default:
-        steps = generateQuickSortSteps(array)
-    }
-    setSortingSteps(steps)
-    setCurrentStep(0)
-    setIsPlaying(false)
-  }, [array, selectedAlgorithm, generateQuickSortSteps, generateMergeSortSteps])
-
-  useEffect(() => {
     let timer: NodeJS.Timeout
     if (isPlaying && currentStep < sortingSteps.length - 1) {
       timer = setTimeout(() => {
@@ -209,7 +237,267 @@ const SortingVisualization = () => {
     if (step.sortedIndices.includes(index)) return 'bg-green-500'
     return 'bg-gray-400'
   }
+  const generateBubbleSortSteps = useCallback((arr: number[]): SortingStep[] => {
+    const steps: SortingStep[] = []
+    const arrayCopy = [...arr]
+    const n = arrayCopy.length
+    const sortedIndices: number[] = []
 
+    for (let i = 0; i < n - 1; i++) {
+      for (let j = 0; j < n - i - 1; j++) {
+        steps.push({
+          array: [...arrayCopy],
+          comparedIndices: [j, j + 1],
+          swappedIndices: [],
+          sortedIndices: [...sortedIndices],
+          message: `Comparing ${arrayCopy[j]} with ${arrayCopy[j + 1]}`
+        })
+
+        if (arrayCopy[j] > arrayCopy[j + 1]) {
+          ;[arrayCopy[j], arrayCopy[j + 1]] = [arrayCopy[j + 1], arrayCopy[j]]
+          steps.push({
+            array: [...arrayCopy],
+            comparedIndices: [],
+            swappedIndices: [j, j + 1],
+            sortedIndices: [...sortedIndices],
+            message: `Swapping ${arrayCopy[j + 1]} and ${arrayCopy[j]}`
+          })
+        }
+      }
+      sortedIndices.push(n - i - 1)
+    }
+    sortedIndices.push(0)
+    steps.push({
+      array: [...arrayCopy],
+      comparedIndices: [],
+      swappedIndices: [],
+      sortedIndices,
+      message: 'Sorting completed!'
+    })
+
+    return steps
+  }, [])
+  const generateSelectionSortSteps = useCallback((arr: number[]): SortingStep[] => {
+    const steps: SortingStep[] = []
+    const arrayCopy = [...arr]
+    const n = arrayCopy.length
+    const sortedIndices: number[] = []
+
+    for (let i = 0; i < n - 1; i++) {
+      let minIdx = i
+
+      for (let j = i + 1; j < n; j++) {
+        steps.push({
+          array: [...arrayCopy],
+          comparedIndices: [minIdx, j],
+          swappedIndices: [],
+          sortedIndices: [...sortedIndices],
+          message: `Finding minimum element: comparing ${arrayCopy[j]} with current minimum ${arrayCopy[minIdx]}`
+        })
+
+        if (arrayCopy[j] < arrayCopy[minIdx]) {
+          minIdx = j
+        }
+      }
+
+      if (minIdx !== i) {
+        ;[arrayCopy[i], arrayCopy[minIdx]] = [arrayCopy[minIdx], arrayCopy[i]]
+        steps.push({
+          array: [...arrayCopy],
+          comparedIndices: [],
+          swappedIndices: [i, minIdx],
+          sortedIndices: [...sortedIndices],
+          message: `Swapping ${arrayCopy[i]} with ${arrayCopy[minIdx]}`
+        })
+      }
+
+      sortedIndices.push(i)
+    }
+    sortedIndices.push(n - 1)
+    steps.push({
+      array: [...arrayCopy],
+      comparedIndices: [],
+      swappedIndices: [],
+      sortedIndices,
+      message: 'Sorting completed!'
+    })
+
+    return steps
+  }, [])
+  // Insertion Sort Implementation
+  const generateInsertionSortSteps = useCallback((arr: number[]): SortingStep[] => {
+    const steps: SortingStep[] = []
+    const arrayCopy = [...arr]
+    const n = arrayCopy.length
+    const sortedIndices: number[] = [0]
+
+    for (let i = 1; i < n; i++) {
+      const key = arrayCopy[i]
+      let j = i - 1
+
+      steps.push({
+        array: [...arrayCopy],
+        comparedIndices: [i],
+        swappedIndices: [],
+        sortedIndices: [...sortedIndices],
+        message: `Current element to insert: ${key}`
+      })
+
+      while (j >= 0 && arrayCopy[j] > key) {
+        steps.push({
+          array: [...arrayCopy],
+          comparedIndices: [j, j + 1],
+          swappedIndices: [],
+          sortedIndices: [...sortedIndices],
+          message: `Comparing ${arrayCopy[j]} with ${key}`
+        })
+
+        arrayCopy[j + 1] = arrayCopy[j]
+        steps.push({
+          array: [...arrayCopy],
+          comparedIndices: [],
+          swappedIndices: [j, j + 1],
+          sortedIndices: [...sortedIndices],
+          message: `Moving ${arrayCopy[j]} to the right`
+        })
+        j--
+      }
+
+      arrayCopy[j + 1] = key
+      sortedIndices.push(i)
+      steps.push({
+        array: [...arrayCopy],
+        comparedIndices: [],
+        swappedIndices: [],
+        sortedIndices: [...sortedIndices],
+        message: `Inserted ${key} into position ${j + 1}`
+      })
+    }
+
+    return steps
+  }, [])
+  // Heap Sort Implementation
+  const generateHeapSortSteps = useCallback((arr: number[]): SortingStep[] => {
+    const steps: SortingStep[] = []
+    const arrayCopy = [...arr]
+    const sortedIndices: number[] = []
+
+    const heapify = (n: number, i: number) => {
+      let largest = i
+      const left = 2 * i + 1
+      const right = 2 * i + 2
+
+      if (left < n) {
+        steps.push({
+          array: [...arrayCopy],
+          comparedIndices: [largest, left],
+          swappedIndices: [],
+          sortedIndices: [...sortedIndices],
+          message: `Comparing ${arrayCopy[largest]} with left child ${arrayCopy[left]}`
+        })
+
+        if (arrayCopy[left] > arrayCopy[largest]) {
+          largest = left
+        }
+      }
+
+      if (right < n) {
+        steps.push({
+          array: [...arrayCopy],
+          comparedIndices: [largest, right],
+          swappedIndices: [],
+          sortedIndices: [...sortedIndices],
+          message: `Comparing ${arrayCopy[largest]} with right child ${arrayCopy[right]}`
+        })
+
+        if (arrayCopy[right] > arrayCopy[largest]) {
+          largest = right
+        }
+      }
+
+      if (largest !== i) {
+        ;[arrayCopy[i], arrayCopy[largest]] = [arrayCopy[largest], arrayCopy[i]]
+        steps.push({
+          array: [...arrayCopy],
+          comparedIndices: [],
+          swappedIndices: [i, largest],
+          sortedIndices: [...sortedIndices],
+          message: `Swapping ${arrayCopy[i]} with ${arrayCopy[largest]}`
+        })
+
+        heapify(n, largest)
+      }
+    }
+
+    // Build max heap
+    for (let i = Math.floor(arrayCopy.length / 2) - 1; i >= 0; i--) {
+      heapify(arrayCopy.length, i)
+    }
+
+    // Extract elements from heap one by one
+    for (let i = arrayCopy.length - 1; i > 0; i--) {
+      steps.push({
+        array: [...arrayCopy],
+        comparedIndices: [0, i],
+        swappedIndices: [],
+        sortedIndices: [...sortedIndices],
+        message: `Moving largest element ${arrayCopy[0]} to end`
+      })
+      ;[arrayCopy[0], arrayCopy[i]] = [arrayCopy[i], arrayCopy[0]]
+      sortedIndices.unshift(i)
+
+      steps.push({
+        array: [...arrayCopy],
+        comparedIndices: [],
+        swappedIndices: [0, i],
+        sortedIndices: [...sortedIndices],
+        message: `Heapifying remaining elements`
+      })
+
+      heapify(i, 0)
+    }
+    sortedIndices.unshift(0)
+
+    return steps
+  }, [])
+
+  useEffect(() => {
+    let steps: SortingStep[] = []
+    switch (selectedAlgorithm) {
+      case 'quickSort':
+        steps = generateQuickSortSteps(array)
+        break
+      case 'mergeSort':
+        steps = generateMergeSortSteps(array)
+        break
+      case 'bubbleSort':
+        steps = generateBubbleSortSteps(array)
+        break
+      case 'selectionSort':
+        steps = generateSelectionSortSteps(array)
+        break
+      case 'insertionSort':
+        steps = generateInsertionSortSteps(array)
+        break
+      case 'heapSort':
+        steps = generateHeapSortSteps(array)
+        break
+      default:
+        steps = generateQuickSortSteps(array)
+    }
+    setSortingSteps(steps)
+    setCurrentStep(0)
+    setIsPlaying(false)
+  }, [
+    array,
+    selectedAlgorithm,
+    generateQuickSortSteps,
+    generateMergeSortSteps,
+    generateBubbleSortSteps,
+    generateSelectionSortSteps,
+    generateInsertionSortSteps,
+    generateHeapSortSteps
+  ])
   return (
     <div className='p-6 max-w-6xl mx-auto border rounded-lg shadow-md bg-white'>
       <div className='space-y-6'>
@@ -246,12 +534,16 @@ const SortingVisualization = () => {
             >
               <option value='quickSort'>Quick Sort</option>
               <option value='mergeSort'>Merge Sort</option>
+              <option value='bubbleSort'>Bubble Sort</option>
+              <option value='selectionSort'>Selection Sort</option>
+              <option value='insertionSort'>Insertion Sort</option>
+              <option value='heapSort'>Heap Sort</option>
             </select>
 
             <select value={speed} onChange={(e) => setSpeed(Number(e.target.value))} className='border p-2 rounded'>
-              <option value='2000'>Slow</option>
-              <option value='1000'>Normal</option>
               <option value='500'>Fast</option>
+              <option value='1000'>Normal</option>
+              <option value='2000'>Slow</option>
             </select>
           </div>
         </div>
