@@ -11,7 +11,7 @@ interface SortingStep {
 const SortingVisualization = () => {
   const [array, setArray] = useState<number[]>([7, 8, 10, 1, 5, 20, 3, 2, 6, 4, 9])
   const [inputValue, setInputValue] = useState<string>('')
-  const [selectedAlgorithm, setSelectedAlgorithm] = useState<string>('quickSort')
+  const [selectedAlgorithm, setSelectedAlgorithm] = useState<string>('selectionSort')
   const [pivot, setPivot] = useState<number | null>(null)
   const [leftPointer, setLeftPointer] = useState<number | null>(null)
   const [rightPointer, setRightPointer] = useState<number | null>(null)
