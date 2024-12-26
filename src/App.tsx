@@ -16,9 +16,16 @@ const SortingVisualization = () => {
   const [currentStep, setCurrentStep] = useState<number>(0)
   const [isPlaying, setIsPlaying] = useState<boolean>(false)
   const [speed, setSpeed] = useState<number>(1000) // milliseconds per step
+  const [arrayLength, setArrayLength] = useState<string>('')
 
-  const generateRandomArray = (length = 10) => {
-    const newArray = Array.from({ length }, () => Math.floor(Math.random() * 50) + 1)
+  const generateRandomArray = (length: number) => {
+    const randomRange = Math.floor(Math.random() * 50) + 1
+    const newArray = Array.from(
+      {
+        length: length || 10
+      },
+      () => Math.floor(Math.random() * randomRange) + 1
+    )
     setArray(newArray)
     setInputValue(newArray.join(', '))
   }
@@ -59,11 +66,12 @@ const SortingVisualization = () => {
       })
     }
 
-    const partition = (arr: number[], leftBound: number, rightBound: number): number => {
-      const pivotIndex = Math.floor(leftBound + (rightBound - leftBound) / 2)
+    const partition = (arr: number[], low: number, high: number): number => {
+      const pivotIndex = Math.floor(low + (high - low) / 2)
       const pivotValue = arr[pivotIndex]
-      let leftPointer = leftBound
-      let rightPointer = rightBound
+      swap(arr, low, pivotIndex)
+      let left = low + 1
+      let right = high
 
       steps.push({
         array: [...arr],
@@ -73,36 +81,30 @@ const SortingVisualization = () => {
         message: `Chọn chốt (pivot) là ${pivotValue} tại vị trí ${pivotIndex}`
       })
 
-      while (leftPointer <= rightPointer) {
-        while (arr[leftPointer] < pivotValue) {
+      while (left < right) {
+        while (left <= high && arr[left] < pivotValue) {
           steps.push({
             array: [...arr],
-            comparedIndices: [leftPointer, pivotIndex],
+            comparedIndices: [left, pivotIndex],
             swappedIndices: [],
             sortedIndices: [...finalPositionIndices],
-            message: `So sánh: ${arr[leftPointer]} < ${pivotValue} (pivot) - Di chuyển con trỏ trái`
+            message: `So sánh: ${arr[left]} < ${pivotValue} (pivot) - Di chuyển con trỏ trái`
           })
-          leftPointer++
+          left++
         }
 
-        while (arr[rightPointer] > pivotValue) {
+        while (right >= low + 1 && arr[right] >= pivotValue) {
           steps.push({
             array: [...arr],
-            comparedIndices: [rightPointer, pivotIndex],
+            comparedIndices: [right, pivotIndex],
             swappedIndices: [],
             sortedIndices: [...finalPositionIndices],
-            message: `So sánh: ${arr[rightPointer]} > ${pivotValue} (pivot) - Di chuyển con trỏ phải`
+            message: `So sánh: ${arr[right]} > ${pivotValue} (pivot) - Di chuyển con trỏ phải`
           })
-          rightPointer--
+          right--
         }
 
-        if (leftPointer <= rightPointer) {
-          if (leftPointer !== rightPointer) {
-            swap(arr, leftPointer, rightPointer)
-          }
-          leftPointer++
-          rightPointer--
-        }
+        if (left < right) swap(arr, left, right)
       }
 
       if (!finalPositionIndices.includes(pivotIndex)) {
@@ -116,8 +118,8 @@ const SortingVisualization = () => {
         sortedIndices: [...finalPositionIndices],
         message: `Hoàn thành phân vùng: Các phần tử bên trái ${pivotValue} nhỏ hơn ${pivotValue}, bên phải lớn hơn ${pivotValue}`
       })
-
-      return leftPointer
+      swap(arr, low, right)
+      return right
     }
 
     const quickSort = (arr: number[], start: number, end: number) => {
@@ -136,7 +138,7 @@ const SortingVisualization = () => {
         quickSort(arr, start, partitionPoint - 1)
 
         // Sắp xếp phần bên phải
-        quickSort(arr, partitionPoint, end)
+        quickSort(arr, partitionPoint + 1, end)
 
         // Đánh dấu phần tử đã ở đúng vị trí
         if (!finalPositionIndices.includes(start)) {
@@ -171,27 +173,27 @@ const SortingVisualization = () => {
     const steps: SortingStep[] = []
     const sortedIndices: number[] = []
 
-    const merge = (arr: number[], left: number, mid: number, right: number) => {
+    const merge = (arr: number[], left: number, mid: number, hight: number) => {
       const leftArray = arr.slice(left, mid + 1)
-      const rightArray = arr.slice(mid + 1, right + 1)
+      const hightArray = arr.slice(mid + 1, hight + 1)
       let i = 0,
         j = 0,
         k = left
 
-      while (i < leftArray.length && j < rightArray.length) {
+      while (i < leftArray.length && j < hightArray.length) {
         steps.push({
           array: [...arr],
           comparedIndices: [left + i, mid + 1 + j],
           swappedIndices: [],
           sortedIndices: [...sortedIndices],
-          message: `Comparing ${leftArray[i]} with ${rightArray[j]}`
+          message: `Comparing ${leftArray[i]} with ${hightArray[j]}`
         })
 
-        if (leftArray[i] <= rightArray[j]) {
+        if (leftArray[i] <= hightArray[j]) {
           arr[k] = leftArray[i]
           i++
         } else {
-          arr[k] = rightArray[j]
+          arr[k] = hightArray[j]
           j++
         }
         k++
@@ -203,13 +205,13 @@ const SortingVisualization = () => {
         k++
       }
 
-      while (j < rightArray.length) {
-        arr[k] = rightArray[j]
+      while (j < hightArray.length) {
+        arr[k] = hightArray[j]
         j++
         k++
       }
 
-      for (let idx = left; idx <= right; idx++) {
+      for (let idx = left; idx <= hight; idx++) {
         sortedIndices.push(idx)
       }
 
@@ -218,16 +220,16 @@ const SortingVisualization = () => {
         comparedIndices: [],
         swappedIndices: [],
         sortedIndices: [...sortedIndices],
-        message: `Merged subarray from index ${left} to ${right}`
+        message: `Merged subarray from index ${left} to ${hight}`
       })
     }
 
-    const mergeSort = (arr: number[], left: number, right: number) => {
-      if (left < right) {
-        const mid = Math.floor((left + right) / 2)
+    const mergeSort = (arr: number[], left: number, hight: number) => {
+      if (left < hight) {
+        const mid = Math.floor((left + hight) / 2)
         mergeSort(arr, left, mid)
-        mergeSort(arr, mid + 1, right)
-        merge(arr, left, mid, right)
+        mergeSort(arr, mid + 1, hight)
+        merge(arr, left, mid, hight)
       }
     }
 
@@ -378,7 +380,7 @@ const SortingVisualization = () => {
           comparedIndices: [],
           swappedIndices: [j, j + 1],
           sortedIndices: [...sortedIndices],
-          message: `Moving ${arrayCopy[j]} to the right`
+          message: `Moving ${arrayCopy[j]} to the hight`
         })
         j--
       }
@@ -405,7 +407,7 @@ const SortingVisualization = () => {
     const heapify = (n: number, i: number) => {
       let largest = i
       const left = 2 * i + 1
-      const right = 2 * i + 2
+      const hight = 2 * i + 2
 
       if (left < n) {
         steps.push({
@@ -421,17 +423,17 @@ const SortingVisualization = () => {
         }
       }
 
-      if (right < n) {
+      if (hight < n) {
         steps.push({
           array: [...arrayCopy],
-          comparedIndices: [largest, right],
+          comparedIndices: [largest, hight],
           swappedIndices: [],
           sortedIndices: [...sortedIndices],
-          message: `Comparing ${arrayCopy[largest]} with right child ${arrayCopy[right]}`
+          message: `Comparing ${arrayCopy[largest]} with hight child ${arrayCopy[hight]}`
         })
 
-        if (arrayCopy[right] > arrayCopy[largest]) {
-          largest = right
+        if (arrayCopy[hight] > arrayCopy[largest]) {
+          largest = hight
         }
       }
 
@@ -539,11 +541,32 @@ const SortingVisualization = () => {
               Update Array
             </button>
             <button
-              onClick={() => generateRandomArray()}
+              onClick={() => generateRandomArray(Number(arrayLength))}
               className='px-4 py-2 bg-purple-500 text-white rounded hover:bg-purple-600'
             >
               Random Array
             </button>
+            <input
+              type='text'
+              accept='number'
+              value={arrayLength}
+              onBlur={() => {
+                if (arrayLength === '') return
+                setArrayLength(String(Number(arrayLength)))
+              }}
+              onChange={(e) => {
+                const value = e.target.value
+
+                const regex = /^[0-9\b]*$/
+
+                if (regex.test(value)) {
+                  setArrayLength(value)
+                }
+              }}
+              className='border p-2 rounded w-16'
+              placeholder='Array Length
+            '
+            />
           </div>
 
           <div className='flex gap-2 items-center'>
