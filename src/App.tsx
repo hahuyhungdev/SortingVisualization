@@ -231,7 +231,6 @@ const SortingVisualization = () => {
     <div className='p-6 max-w-4xl mx-auto border rounded-lg shadow-md bg-white'>
       <div className='space-y-6'>
         <h2 className='text-2xl font-bold text-center'>Sorting Algorithm Visualization</h2>
-
         <div className='flex gap-4 justify-center'>
           <input
             type='text'
@@ -244,7 +243,6 @@ const SortingVisualization = () => {
             Cập nhật mảng
           </button>
         </div>
-
         <div className='flex gap-4 justify-center'>
           <select
             value={selectedAlgorithm}
@@ -259,7 +257,6 @@ const SortingVisualization = () => {
             <option value='heapSort'>Heap Sort</option>
           </select>
         </div>
-
         <div className='flex justify-center gap-4'>
           <button
             onClick={() => handleStep(false)}
@@ -282,7 +279,6 @@ const SortingVisualization = () => {
             Reset
           </button>
         </div>
-
         <div className='flex flex-col items-center space-y-4'>
           <div className='h-64 relative w-full flex items-end justify-center gap-1'>
             {sortingSteps[currentStep]?.array.map((value, index) => (
@@ -309,6 +305,15 @@ const SortingVisualization = () => {
           <div className='text-center text-sm text-gray-500'>
             Bước {currentStep + 1} / {sortingSteps.length}
           </div>
+        </div>
+
+        <div className='text-center text-sm text-gray-500'>
+          <p>
+            author:{' '}
+            <a href='https://github.com/hahuyhungdev' className='text-blue-500 hover:underline'>
+              @hahuyhungdev
+            </a>
+          </p>
         </div>
       </div>
     </div>
