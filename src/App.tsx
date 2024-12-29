@@ -84,7 +84,7 @@ const SortingVisualization = () => {
         message: `Chọn pivot là ${pivotValue} tại vị trí ${pivotIndex}`
       })
 
-      while (left < right) {
+      while (left <= right) {
         while (left <= high && arr[left] < pivotValue) left++
         while (right >= low + 1 && arr[right] >= pivotValue) right--
 
